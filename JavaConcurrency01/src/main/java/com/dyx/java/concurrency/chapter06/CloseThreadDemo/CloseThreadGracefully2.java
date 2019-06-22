@@ -1,4 +1,4 @@
-package com.dyx.java.concurrency.chapter06;
+package com.dyx.java.concurrency.chapter06.CloseThreadDemo;
 
 /**
  * CloseThreadGracefully

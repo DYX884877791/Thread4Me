@@ -11,7 +11,12 @@ public class ThreadSimpleApi {
         Thread thread = new Thread(() -> {
             Optional.of("Hello").ifPresent(System.out::println);
             try {
+                /**
+                 * 当前“正在执行的线程”休眠（暂停执行）。这个“正在执行的线程”是指 this.currentThread() 返回的线程。
+                 */
+                long timeBeforeSleep = System.currentTimeMillis();
                 Thread.sleep(2_000L);
+                System.out.println(System.currentTimeMillis() - timeBeforeSleep);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

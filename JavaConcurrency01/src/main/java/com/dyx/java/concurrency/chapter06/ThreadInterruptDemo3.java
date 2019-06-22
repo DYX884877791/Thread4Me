@@ -23,6 +23,8 @@ public class ThreadInterruptDemo3 {
                     e.printStackTrace();
                     //**
                     // 观察异常信息：sleep interrupted，但thread线程还是依旧在运行，思考一下：为什么下一次打印没有异常信息（捕获到异常）呢？
+                    // 因为只是thread的第一次sleep被中断，并且异常被捕获到也不会让该线程停止运行，但整个线程体还是死循环，所以还会继续运行，
+                    // 只是后面的sleep方法不会执行，还是会输出开始两行信息
                 }
             }
             }
