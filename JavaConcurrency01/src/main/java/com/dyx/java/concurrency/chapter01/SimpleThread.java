@@ -24,7 +24,10 @@ public class SimpleThread {
         };
 
         Thread.State state = t1.getState();
+        System.out.println(state);
         t1.start();
+        System.out.println(state);
+
 
 
         //主线程的执行单元
