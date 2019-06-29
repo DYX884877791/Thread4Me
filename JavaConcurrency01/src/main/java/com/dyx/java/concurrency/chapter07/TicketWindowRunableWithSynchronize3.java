@@ -22,7 +22,7 @@ public class TicketWindowRunableWithSynchronize3 implements Runnable {
         while (true) {
 
             if (ticketIsSaleOut()) {
-                break; // 当票已经卖完了，直接退出循环
+                break; // 当号码已经发完了，直接退出循环
             }
         }
     }
