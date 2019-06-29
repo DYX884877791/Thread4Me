@@ -12,7 +12,7 @@ public class TicketWindow1 extends Thread {
     private final String name;
 
     //每日最大的号码
-    private static final int MAX = 50;
+    private static final int MAX = 500;
 
     //当前的号码，将index变量设置为static即各对象共享的
     /**
@@ -30,11 +30,11 @@ public class TicketWindow1 extends Thread {
             /**
              * 当加入线程休眠逻辑时，数据的安全问题更加显而易见
              */
-            try {
-                Thread.sleep(1000L);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+//            try {
+//                Thread.sleep(1000L);
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
         }
     }
 }

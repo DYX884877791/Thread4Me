@@ -12,6 +12,9 @@ public class Bank1 {
 
         TicketWindow1 ticketWindow3 = new TicketWindow1("三号柜台");
         ticketWindow3.start();
+
+        TicketWindow1 ticketWindow4 = new TicketWindow1("四号柜台");
+        ticketWindow4.start();
         //此处出现顺序混乱的情况：是因为序号小的线程在没有输出之前，其他线程就已经输出完毕了
     }
 
