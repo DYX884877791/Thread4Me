@@ -27,17 +27,29 @@ public class ProducerConsumerDemo2 {
             System.out.println("[" + Thread.currentThread().getName() + ":]is produced?===========>" + isProduced);
             if (isProduced) { // ......2
                 try {
-                    /**
-                     * wait():让当前线程等待(一直被挂起)直到另一个线程调用该对象(LOCK对象)的notify或者notifyAll方法，
-                     *        当另一个线程调用了LOCK对象的notify或者notifyAll方法时，当前线程则会继续运行；
-                     *        在当前场景下，只有当数据被消费了，生产数据的线程才会继续运行，所以LOCK的notify方法应该是由
-                     *        消费方法里面消费成功之后来调用
-                     *
-                     *        注意：wait方法会释放掉当前线程所持有的锁，并让该线程进入到LOCK对象中的等待队列之中
-                     *
-                     */
+                    long startTime = System.currentTimeMillis();
+                    System.out.println("startTime:" + startTime);
                     System.out.println("[" + Thread.currentThread().getName() + "]waiting...");
+                    /**
+                     * wait():
+                     *      让当前线程等待(一直被挂起..BLOCKED状态)直到另一个线程调用该对象(LOCK对象)的notify或者notifyAll方法，
+                     *      该方法会使当前线程释放掉目前已经拥有锁资源的所有权，并在此处休眠，当LOCK的notify方法或者notifyAll方法
+                     *      被调用，当前线程则会被唤醒，但并不是从此处开始立即开始运行，而是等待cpu调度，当cpu调度该线程时，当前线程
+                     *      立即从此处运行
+                     *
+                     * wait方法会释放掉当前线程所持有的锁，并让该线程进入到LOCK对象中的等待队列之中
+                     */
                     LOCK.wait(); // 如果已经生产数据了，
+
+                    long endTime = System.currentTimeMillis();
+                    /**
+                     * 观察到endTime - startTime为2秒，正好为消费者消费的时间，说明在消费者消费的时间中，该线程的确等待了2秒
+                     */
+                    System.out.println("endTime:" + endTime);//
+
+                    /**
+                     * wait方法重载：wait(long timeout)，timeout：超时时间，到超时时间，自己主动唤醒自己，不需要其他线程来唤醒
+                     */
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
