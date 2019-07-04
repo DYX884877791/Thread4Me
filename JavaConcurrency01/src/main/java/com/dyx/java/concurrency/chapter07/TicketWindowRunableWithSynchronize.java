@@ -18,7 +18,7 @@ public class TicketWindowRunableWithSynchronize implements Runnable {
              *
              * 多个线程运行到此处，但最终只有一个线程才能抢到MONITOR对象的锁，对应的JVM指令为monitorenter，其他线程进入到该对象
              * 的同步队列里面，等待下一次的抢夺锁资源，当抢到锁的线程的方法执行完了，会释放锁资源，不再拥有锁，对应的JVM指令
-             * 为monitorexit，随后其他线程来抢夺锁，谁抢到了锁就会执行它的代码逻辑
+             * 为monitorexit，随后其他线程来抢夺锁，谁抢到了锁就会执行它的代码逻辑，即synchronized将多线程由并行执行变为串行执行
              */
             synchronized (MONITOR) {
 

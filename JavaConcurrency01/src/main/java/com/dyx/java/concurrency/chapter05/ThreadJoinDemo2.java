@@ -27,7 +27,8 @@ public class ThreadJoinDemo2 {
         thread1.join();
         thread2.join();
         /**
-         * 这里会先让thread1和thread2线程先执行完，然后再执行main线程，而thread1和thread2线程之间是可以交替执行的
+         * 这里会先让thread1和thread2线程先执行完，然后再执行main线程，而thread1和thread2线程之间是可以交替执行的，
+         * 如果在thread2.start()方法之前调用thread1.join()方法，则会thread1线程先运行完之后，thread2线程才开始启动
          */
 
         System.out.println("All of Tasks finished...And main thread start...");
