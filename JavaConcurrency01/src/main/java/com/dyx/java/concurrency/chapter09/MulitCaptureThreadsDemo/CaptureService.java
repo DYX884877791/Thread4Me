@@ -51,7 +51,7 @@ public class CaptureService {
 //                    } catch (InterruptedException e) {
 //                        e.printStackTrace();
 //                    }
-                    workThreads.add(thread);//3.将各线程加入到容器中
+                    workThreads.add(thread);//3.将各线程加入到容器中，将这段语句放入synchronize语句中，避免数据不安全
                 });
 
         workThreads.stream().forEach(thread -> {

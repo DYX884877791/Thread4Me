@@ -10,6 +10,9 @@ package com.dyx.java.concurrency.chapter09;
  *      3.使用sleep方法并不需要前面有synchronized方法，而wait方法需要
  *      4.sleep方法并不需要去唤醒它，而wait方法需要去唤醒它，（wait(long timeout)方法除外）
  *
+ *      5.sleep表示休眠并不会释放锁，所以如果有多个线程争夺锁并sleep(synchronize...sleep...)，则只有一个线程会进入到synchronize中，
+ *      然后sleep...，其他线程会被阻塞；而wait方法会释放锁，如果有多个线程争夺锁并wait(synchronize...wait...)，则可能会有多个线程
+ *      进入到synchronize语句中，随后等待...，其他线程不会被阻塞。
  *
  * @auther: mac
  * @since: 2019-07-03 22:47

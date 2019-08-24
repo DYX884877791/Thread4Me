@@ -11,10 +11,10 @@ public class CreateThread5 {
 
     public static void main(String[] args) {
         for (int i = 0; i < Integer.MAX_VALUE; i++) {
-            new Thread(() -> {
-                byte[] bytes = new byte[1024 * 1024];
-
-            }).start();
+//            new Thread(() -> {
+//                byte[] bytes = new byte[1024 * 1024];
+//
+//            }).start();
         }
     }
 

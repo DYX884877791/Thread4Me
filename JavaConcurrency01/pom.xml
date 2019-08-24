@@ -13,11 +13,11 @@
 
     <properties>
         <!-- 定义资源文件编码格式 -->
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+<!--        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>-->
+<!--        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>-->
 
-        <!-- jdk版本 -->
-        <java.version>1.8</java.version>
+<!--        &lt;!&ndash; jdk版本 &ndash;&gt;-->
+<!--        <java.version>1.8</java.version>-->
 
         <!-- spring版本 -->
         <spring.version>4.3.24.RELEASE</spring.version>
