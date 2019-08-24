@@ -5,12 +5,16 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * 线程池，自己实现一个简易版的线程池
+ * 线程池，自己实现一个简易的线程池，并添加拒绝策略
  *
  * 1. 必须要有一个任务队列，假设提交了一百个任务，但线程池中同时执行的任务只能有20个，那多出来的任务放在哪儿呢-----任务队列
  * 2. 拒绝策略：在任务队列中提交的任务也不能无限多，如果过多，如何处理：1. 抛出异常 2. 直接丢弃 3. 阻塞 4. 放在临时队列
  * 3. 初始化：3个重要参数 初始容量init 活跃的线程数active 最大的线程数max  max >= active >= init
  *
+ *
+ * 线程池添加拒绝策略：
+ * 在上一版中，线程池中的用来存储提交任务的任务队列的（LinkedList）容量不定，LinkedList会自动扩容，现在要完成的目标是，规定任务队列的
+ * 最大容量，当添加的任务数量超过最大容量时，线程池触发拒绝策略；另一个要求就是添加停止线程池的方法
  *
  * 自动扩容的线程池
  * 思路：当任务进来，能否直接用初始化时的线程数来处理，如果可以，就不用添加额外的线程，否则尝试扩充线程数量到active，如果active值还是
@@ -20,22 +24,32 @@ import java.util.List;
  */
 public class CustomerSimpleThreadPool2 {
 
-    // 1 初始化时线程池中的线程数量
+    // 1 初始化时线程池中可运行的线程数量
     private final int size;
 
-    // 1.1 线程池中的线程的默认数量
+    // 1.1 任务队列中可以存放线程的数量（相对于上一版添加了这个变量，且更改了默认构造器）
+    private final int queueSize;
+
+    private final DiscardPolicy discardPolicy;
+
+    // 1.2 线程池中可运行的线程的默认数量
     private final static int DEFAULT_SIZE = 10;
 
+    // 1.3 任务队列中可以存放线程的默认数量
+    private final static int DEFAULT_TASK_QUEUE_SIZE = 20;
+
     // 2 创建线程池时指定线程数量
-    public CustomerSimpleThreadPool2(int size) {
+    public CustomerSimpleThreadPool2(int size, int queueSize, DiscardPolicy discardPolicy) {
         this.size = size;
+        this.queueSize = queueSize;
+        this.discardPolicy = discardPolicy;
         // 2.1 调用线程池构造器时需要对线程池进行初始化
         init();
     }
 
     // 2.2 如果创建时没有指定线程数量的话，给它分配默认大小
     public CustomerSimpleThreadPool2() {
-        this(DEFAULT_SIZE);
+        this(DEFAULT_SIZE, DEFAULT_TASK_QUEUE_SIZE, DEFAULT_DISCARD_POLICY);
     }
 
     // 2.3 线程池的初始化方法
@@ -48,8 +62,20 @@ public class CustomerSimpleThreadPool2 {
 
     // 2.5 往线程池提交任务的方法，将添加的任务放在任务队列中
     public void submit(Runnable runnable) {
+
+        // 提交时判断线程池是否被关闭
+        if (isDestroy) {
+            throw new RuntimeException("The Thread Pool Has been shutdown...");
+        }
+
         // 因为是任务队列的写操作，工作线程是读操作，所以加锁
         synchronized (TASK_QUEUE) {
+
+            // 因为添加了拒绝策略，提交时判断一下
+            if (TASK_QUEUE.size() > this.queueSize) {
+                discardPolicy.discard();
+            }
+
             System.out.println("A Task join the thread pool...");
             TASK_QUEUE.addLast(runnable);
             // 添加之后，唤醒被TASK_QUEUE阻塞的线程
@@ -158,4 +184,54 @@ public class CustomerSimpleThreadPool2 {
 
     // 7 定义一个工作的线程的集合
     private static final List<WorkerThread> WORKER_THREAD_QUEUE = new ArrayList<>();
+
+    // 8 定义拒绝策略的接口及异常
+    public interface DiscardPolicy {
+        // 8.1 定义拒绝的接口方法
+        void discard();
+    }
+
+    public static class DiscardException extends RuntimeException {
+        public DiscardException(String message) {
+            super(message);
+        }
+    }
+
+    // 9 默认的拒绝策略，抛出异常
+    public final static DiscardPolicy DEFAULT_DISCARD_POLICY = () -> {
+        throw new DiscardException("Too many task, the task will be discarded");
+    };
+
+    // 10 添加停止线程池的方法（实际上就是停止WorkerThread），这里停止时让线程池中的所有任务都运行完毕之后才停止
+    public void shutdown() {
+        // 如果任务队列中还有线程，短暂暂停一下
+        while (!TASK_QUEUE.isEmpty()) {
+            try {
+                Thread.sleep(10_000L);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        // 如果任务队列中没有线程，但是在WORKER_THREAD_QUEUE中还有线程
+        int workerSize = WORKER_THREAD_QUEUE.size();
+        while (workerSize > 0) {
+            for (WorkerThread workerThread : WORKER_THREAD_QUEUE) {
+                // 任务队列中没有线程，也有可能有线程被阻塞了，对应上面wait方法处
+                if (workerThread.getStatus() == WorkerThreadStatus.BLOCKED) {
+                    // 当处于wait时，可使用interrupt方法，中断wait
+                    workerThread.interrupt();
+
+                    // 另外一种情况：workerThread已经被唤醒了，往下执行了，调用interrupt无效，直接调用close方法
+                    workerThread.close();
+                    workerSize--;
+                }
+            }
+        }
+        System.out.println("The Thread Pool Shutdown...");
+        // 而且，如果关闭了线程池，则不能再往线程池中提交任务了，定义一个标记线程池是否被关闭的状态
+        this.isDestroy = true;
+    }
+
+    private volatile boolean isDestroy = false;
 }

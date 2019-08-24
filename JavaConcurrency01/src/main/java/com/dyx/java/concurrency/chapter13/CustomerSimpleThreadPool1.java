@@ -11,25 +11,25 @@ import java.util.List;
  * 2. 拒绝策略：在任务队列中提交的任务也不能无限多，如果过多，如何处理：1. 抛出异常 2. 直接丢弃 3. 阻塞 4. 放在临时队列
  * 3. 初始化：3个重要参数 初始容量init 活跃的线程数active 最大的线程数max  max >= active >= init
  *
- * 目前先实现简单线程池，----可以运行的简单线程池，下一版添加自动扩容功能
+ * 目前先实现简单线程池，----可以运行的简单线程池，
  */
-public class CustomerSimpleThreadPool {
+public class CustomerSimpleThreadPool1 {
 
-    // 1 初始化时线程池中的线程数量
+    // 1 初始化时线程池中可运行的线程数量
     private final int size;
 
-    // 1.1 线程池中的线程的默认数量
+    // 1.1 线程池中的线程可运行的默认数量
     private final static int DEFAULT_SIZE = 10;
 
     // 2 创建线程池时指定线程数量
-    public CustomerSimpleThreadPool(int size) {
+    public CustomerSimpleThreadPool1(int size) {
         this.size = size;
         // 2.1 调用线程池构造器时需要对线程池进行初始化
         init();
     }
 
     // 2.2 如果创建时没有指定线程数量的话，给它分配默认大小
-    public CustomerSimpleThreadPool() {
+    public CustomerSimpleThreadPool1() {
         this(DEFAULT_SIZE);
     }
 

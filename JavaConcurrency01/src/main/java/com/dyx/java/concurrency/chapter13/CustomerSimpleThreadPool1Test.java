@@ -1,13 +1,13 @@
 package com.dyx.java.concurrency.chapter13;
 
 
-public class CustomerSimpleThreadPoolTest {
+public class CustomerSimpleThreadPool1Test {
 
-    // 1. 使用默认数量的线程池，往其中添加40个线程
+    // 使用默认数量的线程池，往其中添加40个线程
     public static void main(String[] args) {
-        CustomerSimpleThreadPool customerSimpleThreadPool = new CustomerSimpleThreadPool();
+        CustomerSimpleThreadPool1 customerSimpleThreadPool1 = new CustomerSimpleThreadPool1();
         for (int i = 0; i < 40 ; i++) {
-            customerSimpleThreadPool.submit(() -> {
+            customerSimpleThreadPool1.submit(() -> {
                 try {
                     System.out.println(Thread.currentThread().getName() + " is running...");
                     Thread.sleep(20_000L);
