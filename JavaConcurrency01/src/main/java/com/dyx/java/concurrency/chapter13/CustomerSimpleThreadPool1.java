@@ -15,10 +15,10 @@ import java.util.List;
  */
 public class CustomerSimpleThreadPool1 {
 
-    // 1 初始化时线程池中可运行的线程数量
+    // 1 初始化时线程池中可同时运行的线程数量
     private final int size;
 
-    // 1.1 线程池中的线程可运行的默认数量
+    // 1.1 线程池中的线程可同时运行的默认数量
     private final static int DEFAULT_SIZE = 10;
 
     // 2 创建线程池时指定线程数量
@@ -43,9 +43,10 @@ public class CustomerSimpleThreadPool1 {
 
     // 2.5 往线程池提交任务的方法，将添加的任务放在任务队列中
     public void submit(Runnable runnable) {
-        // 因为是任务队列的写操作，工作线程是读操作，所以加锁
+        // 因为这个方法是任务队列的写操作，而工作线程是任务队列的读操作，所以加锁
         synchronized (TASK_QUEUE) {
             System.out.println("A Task join the thread pool...");
+            // 将提交的任务放在任务队列中
             TASK_QUEUE.addLast(runnable);
             // 添加之后，唤醒被TASK_QUEUE阻塞的线程
             TASK_QUEUE.notifyAll();
@@ -54,7 +55,7 @@ public class CustomerSimpleThreadPool1 {
 
     // 3 定义线程池中的工作线程
     private static class WorkerThread extends Thread {
-        // 3.1 默认分配时的状态是空闲的
+        // 3.1 创建工作线程的默认状态是空闲的
         private volatile WorkerThreadStatus status = WorkerThreadStatus.FREE;
 
         // 3.2 获取状态
@@ -125,21 +126,27 @@ public class CustomerSimpleThreadPool1 {
         }
     }
 
-    // 3.5 线程池中定义的线程的任务队列
+    // 3.5 线程池中定义的线程的任务队列，用于存放提交的任务
     private static final LinkedList<Runnable> TASK_QUEUE = new LinkedList<>();
 
     // 4 定义线程池中的工作线程的状态，因为线程池中各线程的状态与平时的普通线程不一致，需要自己来定义
     private enum WorkerThreadStatus {
-        //空闲、运行中、阻塞、死亡
-        FREE, RUNNING, BLOCKED, DEAD;
+        // 空闲：没有任务提交进来，任务队列为空，工作线程无事可做
+        FREE,
+        // 运行中：有任务提交进来，任务队列有数据，工作线程拉取到一个任务，
+        RUNNING,
+        // 阻塞
+        BLOCKED,
+        // 死亡
+        DEAD;
     }
 
     // 5 创建工作线程
     public void createWorkerThread() {
         WorkerThread workerThread = new WorkerThread(WORKER_THREAD_GROUP, worker_thread_prefix + (seq++));
         workerThread.start();
-        // 5.1 工作线程启动后将工作线程添加至WORKER_THREAD_QUEUE中
-        WORKER_THREAD_QUEUE.add(workerThread);
+        // 5.1 工作线程启动后将工作线程添加至WORKER_THREAD_LIST中
+        WORKER_THREAD_LIST.add(workerThread);
     }
 
     // 6 定义工作线程所属的线程组以及各工作线程的name，此处使用自增id
@@ -151,6 +158,10 @@ public class CustomerSimpleThreadPool1 {
     // 6.2 定义工作线程的后缀，此处使用自增id
     private static volatile int seq = 0;
 
-    // 7 定义一个工作的线程的集合
-    private static final List<WorkerThread> WORKER_THREAD_QUEUE = new ArrayList<>();
+    /**
+     *  7 用于存放工作线程的容器，线程池已启动，创建若干的工作线程，并存储在该容器中，随后启动这些线程，这些工作线程用于从任务队列中
+     *      拉取提交的任务，只是调用任务的run方法，而且执行完任务的run方法之后，工作线程是不能自动结束的，所以位于while循环之中，
+     *      工作线程的数量跟定义线程池的size有关
+     */
+    private static final List<WorkerThread> WORKER_THREAD_LIST = new ArrayList<>();
 }

@@ -14,7 +14,7 @@ public class CustomerSimpleThreadPool3Test {
             customerSimpleThreadPool3.submit(() -> {
                 try {
                     System.out.println(Thread.currentThread().getName() + " is running...");
-                    Thread.sleep(5_000L);
+                    Thread.sleep(10_000L);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }

@@ -16,15 +16,10 @@ import java.util.List;
  * 在上一版中，线程池中的用来存储提交任务的任务队列的（LinkedList）容量不定，LinkedList会自动扩容，现在要完成的目标是，规定任务队列的
  * 最大容量，当添加的任务数量超过最大容量时，线程池触发拒绝策略；另一个要求就是添加停止线程池的方法
  *
- * 自动扩容的线程池
- * 思路：当任务进来，能否直接用初始化时的线程数来处理，如果可以，就不用添加额外的线程，否则尝试扩充线程数量到active，如果active值还是
- *  满足不了，则扩充到max，如果max还是满足不了，提交多余的任务就会加到任务队列中，如果超过任务队列的最大值，则执行拒绝策略。。。
- *  而且还要考虑到如果线程数量达到max时，比如100个，就是说在业务处理峰值时，线程池中撑到了最大容量，当峰值一过，线程池中总不可能一直
- *  维持这一百个线程（增加CPU上下文的切换开销），需要降低线程数量，可以降低到active。。。
  */
 public class CustomerSimpleThreadPool2 {
 
-    // 1 初始化时线程池中可运行的线程数量
+    // 1 初始化时线程池中可同时运行的线程数量
     private final int size;
 
     // 1.1 任务队列中可以存放线程的数量（相对于上一版添加了这个变量，且更改了默认构造器）
@@ -32,8 +27,8 @@ public class CustomerSimpleThreadPool2 {
 
     private final DiscardPolicy discardPolicy;
 
-    // 1.2 线程池中可运行的线程的默认数量
-    private final static int DEFAULT_SIZE = 10;
+    // 1.2 线程池中可同时运行的线程的默认数量
+    private final static int DEFAULT_WORKER_SIZE = 10;
 
     // 1.3 任务队列中可以存放线程的默认数量
     private final static int DEFAULT_TASK_QUEUE_SIZE = 20;
@@ -49,7 +44,7 @@ public class CustomerSimpleThreadPool2 {
 
     // 2.2 如果创建时没有指定线程数量的话，给它分配默认大小
     public CustomerSimpleThreadPool2() {
-        this(DEFAULT_SIZE, DEFAULT_TASK_QUEUE_SIZE, DEFAULT_DISCARD_POLICY);
+        this(DEFAULT_WORKER_SIZE, DEFAULT_TASK_QUEUE_SIZE, DEFAULT_DISCARD_POLICY);
     }
 
     // 2.3 线程池的初始化方法
@@ -70,9 +65,9 @@ public class CustomerSimpleThreadPool2 {
 
         // 因为是任务队列的写操作，工作线程是读操作，所以加锁
         synchronized (TASK_QUEUE) {
-
-            // 因为添加了拒绝策略，提交时判断一下
+            // 因为添加了拒绝策略，提交时判断一下，
             if (TASK_QUEUE.size() > this.queueSize) {
+                System.out.printf("The TASK_QUEUE Size is [%d], The queueSize is [%d]\n", TASK_QUEUE.size(), this.queueSize);
                 discardPolicy.discard();
             }
 
@@ -135,10 +130,10 @@ public class CustomerSimpleThreadPool2 {
                 if (runnable != null) {
                     // 3.9 执行过程中，工作线程的状态变为RUNNING
                     this.status = WorkerThreadStatus.RUNNING;
-                    System.out.println("Worker Thread [" + Thread.currentThread() + "] started...");
+                    System.out.println("Worker Thread [" + Thread.currentThread().getName() + "] started...");
                     // 实际上是工作线程从线程队列中取出被提交的线程，来直接执行任务的run方法
                     runnable.run();
-                    System.out.println("Worker Thread [" + Thread.currentThread() + "] finished...");
+                    System.out.println("Worker Thread [" + Thread.currentThread().getName() + "] finished...");
                     // 3.10 执行完毕，工作线程的状态变为FREE
                     this.status = WorkerThreadStatus.FREE;
                 }
@@ -170,7 +165,7 @@ public class CustomerSimpleThreadPool2 {
         WorkerThread workerThread = new WorkerThread(WORKER_THREAD_GROUP, worker_thread_prefix + (seq++));
         workerThread.start();
         // 5.1 工作线程启动后将工作线程添加至WORKER_THREAD_QUEUE中
-        WORKER_THREAD_QUEUE.add(workerThread);
+        WORKER_THREAD_LIST.add(workerThread);
     }
 
     // 6 定义工作线程所属的线程组以及各工作线程的name，此处使用自增id
@@ -183,7 +178,7 @@ public class CustomerSimpleThreadPool2 {
     private static volatile int seq = 0;
 
     // 7 定义一个工作的线程的集合
-    private static final List<WorkerThread> WORKER_THREAD_QUEUE = new ArrayList<>();
+    private static final List<WorkerThread> WORKER_THREAD_LIST = new ArrayList<>();
 
     // 8 定义拒绝策略的接口及异常
     public interface DiscardPolicy {
@@ -214,9 +209,9 @@ public class CustomerSimpleThreadPool2 {
         }
 
         // 如果任务队列中没有线程，但是在WORKER_THREAD_QUEUE中还有线程
-        int workerSize = WORKER_THREAD_QUEUE.size();
+        int workerSize = WORKER_THREAD_LIST.size();
         while (workerSize > 0) {
-            for (WorkerThread workerThread : WORKER_THREAD_QUEUE) {
+            for (WorkerThread workerThread : WORKER_THREAD_LIST) {
                 // 任务队列中没有线程，也有可能有线程被阻塞了，对应上面wait方法处
                 if (workerThread.getStatus() == WorkerThreadStatus.BLOCKED) {
                     // 当处于wait时，可使用interrupt方法，中断wait
